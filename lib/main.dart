@@ -18,8 +18,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.lightBlue[50],
         textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black87), 
-          bodyMedium: TextStyle(color: Colors.black54), 
+          bodyLarge: TextStyle(color: Colors.black87),
+          bodyMedium: TextStyle(color: Colors.black54),
         ),
       ),
       home: const MyHomePage(),
@@ -52,18 +52,71 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _addAlimento() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      await SqlHelper().insertAlimento(
-        Alimento(
-          nome: _nomeController.text,
-          preco: double.tryParse(_precoController.text) ?? 0.0,
-        ),
-      );
-      _nomeController.clear();
-      _precoController.clear();
-      await _loadAlimentos();
-    }
+    _nomeController.clear();
+    _precoController.clear();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Adicionar Alimento'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _nomeController,
+                  decoration: const InputDecoration(labelText: 'Nome'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Informe o nome';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _precoController,
+                  decoration: const InputDecoration(labelText: 'Preço'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Informe o preço';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  setState(() => _isLoading = true);
+                  await SqlHelper().insertAlimento(
+                    Alimento(
+                      nome: _nomeController.text,
+                      preco: double.tryParse(_precoController.text) ?? 0.0,
+                    ),
+                  );
+                  _nomeController.clear();
+                  _precoController.clear();
+                  await _loadAlimentos();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Salvar', style: TextStyle(color: Colors.blue)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child:
+                  const Text('Cancelar', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _updateAlimento(int id) async {
@@ -127,7 +180,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar', style: TextStyle(color: Colors.red)),
+              child:
+                  const Text('Cancelar', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -160,12 +214,14 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context, index) {
                 final alimento = _alimentos[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                   elevation: 2,
                   child: ListTile(
                     title: Text(
                       alimento.nome,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       'Preço: R\$${alimento.preco.toStringAsFixed(2)}',
